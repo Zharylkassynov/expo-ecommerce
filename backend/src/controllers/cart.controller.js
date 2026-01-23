@@ -39,6 +39,7 @@ export async function addToCart(req, res) {
         let cart = await Cart.findOne({clerkId: req.user.clerkId})
 
         if (!cart) {
+            const user = req.user;
             cart = await Cart.user({
                 user: user._id,
                 clerkId: user.clerkId,

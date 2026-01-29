@@ -24,7 +24,7 @@ function OrdersPage() {
         updateStatusMutation.mutate({orderId, status: newStatus});
     }
 
-    const orders = ordersData.orders || [];
+    const orders = ordersData?.orders || [];
 
     return (
         <div className="space-y-6">
@@ -68,7 +68,7 @@ function OrdersPage() {
                                     );
 
                                     return (
-                                        <tr key={"order._id"}>
+                                        <tr key={order._id}>
                                             <td>
                                                 <span
                                                     className={"font-medium"}>#{order._id.slice(-8).toUpperCase()}</span>
@@ -93,9 +93,9 @@ function OrdersPage() {
                                                 <select
                                                     value={order.status}
                                                     onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                                    className="select select-sm">
+                                                    className="select select-sm"
                                                     disabled={updateStatusMutation.isPending}
-                                                    >
+                                                >
                                                     <option value="pending">Pending</option>
                                                     <option value="shipped">Shipped</option>
                                                     <option value="delivered">Delivered</option>

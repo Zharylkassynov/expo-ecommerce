@@ -20,10 +20,12 @@ function ProductsPage() {
     const queryClient = useQueryClient();
 
     // fetch some data
-    const {data: products = []} = useQuery({
+    const {data: productsData} = useQuery({
         queryKey: ["products"],
         queryFn: productApi.getAll,
     });
+    
+    const products = Array.isArray(productsData) ? productsData : [];
 
     // creating, update, deleting
     const createProductMutation = useMutation({
@@ -318,7 +320,7 @@ function ProductsPage() {
                                 )}
                             </div>
 
-                            {imagePreviews.length > 0 && (
+                            {Array.isArray(imagePreviews) && imagePreviews.length > 0 && (
                                 <div className="flex gap-2 mt-2">
                                     {imagePreviews.map((preview, index) => (
                                         <div key={index} className="avatar">

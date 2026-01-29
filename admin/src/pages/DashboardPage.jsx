@@ -14,7 +14,8 @@ function DashboardPage() {
         queryFn: statsApi.getDashboard,
     });
 
-    const recentOrders = ordersData?.orders?.slice(0, 5) || [];
+    const ordersArray = Array.isArray(ordersData?.orders) ? ordersData.orders : [];
+    const recentOrders = ordersArray.slice(0, 5);
 
     const statsCards = [
         {

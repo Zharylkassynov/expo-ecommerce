@@ -2,8 +2,13 @@ import axiosInstance from "./axios";
 
 export const productApi = {
     getAll: async () => {
-        const {data} = await axiosInstance.get("/admin/products");
-        return data;
+        try {
+            const {data} = await axiosInstance.get("/admin/products");
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            return [];
+        }
     },
 
     create: async (formData) => {
@@ -24,8 +29,13 @@ export const productApi = {
 
 export const orderApi = {
     getAll: async () => {
-        const {data} = await axiosInstance.get("/admin/orders");
-        return data;
+        try {
+            const {data} = await axiosInstance.get("/admin/orders");
+            return data || {};
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+            return {orders: []};
+        }
     },
 
     updateStatus: async ({orderId, status}) => {

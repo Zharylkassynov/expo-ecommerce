@@ -1,25 +1,19 @@
 import multer from 'multer';
 import path from 'path';
 
-const storage = multer.diskStorage({
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname || "").toLowerCase();
-        const safeExt = [".jpeg", ".jpg", ".png", ".webp"].includes(ext) ? ext : "";
-        const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        cb(null, `${unique}${safeExt}`);
-    }
-})
+// Use memory storage instead of disk storage to avoid creating tmp directory
+const storage = multer.memoryStorage();
 
 // fileFilter: jpeg,jpg,png,webp
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp/;
-    const extname = allowdTypes.test(path.extname(file.originalname).toLocaleLowerCase());
-    const mineType = allowedTypes.test(file.mineType)
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
 
-    if(extname && mineType) {
-        cb(null, true)
-    } else{
-        cb(new Error("Only image files are allowed (jpeg, jpg, png, webp).)"))
+    if(extname && mimetype) {
+        cb(null, true);
+    } else {
+        cb(new Error("Only image files are allowed (jpeg, jpg, png, webp)."));
     }
 }
 

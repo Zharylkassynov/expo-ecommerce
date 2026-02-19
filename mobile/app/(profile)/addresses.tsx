@@ -2,11 +2,11 @@ import AddressCard from "@/components/AddressCard";
 import AddressesHeader from "@/components/AddressesHeader";
 import AddressFormModal from "@/components/AddressFormModal";
 import SafeScreen from "@/components/SafeScreen";
-import {useAddresses} from "@/hooks/useAddresses";
-import {Address} from "@/types";
-import {Ionicons} from "@expo/vector-icons";
-import {useState} from "react";
-import {ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import { useAddressess } from "@/hooks/useAddressess";
+import { Address } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 function AddressesScreen() {
     const {
@@ -18,8 +18,8 @@ function AddressesScreen() {
         isError,
         isLoading,
         isUpdatingAddress,
-        updateAddress
-    } = useAddresses();
+        updateAddress,
+    } = useAddressess();
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
     const [addressForm, setAddressForm] = useState({
@@ -33,7 +33,7 @@ function AddressesScreen() {
         isDefault: false,
     });
 
-    const handleAddAddress = async () => {
+    const handleAddAddress = () => {
         setShowAddressForm(true);
         setEditingAddressId(null);
         setAddressForm({
@@ -46,9 +46,9 @@ function AddressesScreen() {
             phoneNumber: "",
             isDefault: false,
         });
-    }
+    };
 
-    const handleEditAddress = async (address: Address) => {
+    const handleEditAddress = (address: Address) => {
         setShowAddressForm(true);
         setEditingAddressId(address._id);
         setAddressForm({
@@ -61,16 +61,16 @@ function AddressesScreen() {
             phoneNumber: address.phoneNumber,
             isDefault: address.isDefault,
         });
-    }
+    };
 
-    const handleDeleteAddress = async (addressId: string, label: string) => {
+    const handleDeleteAddress = (addressId: string, label: string) => {
         Alert.alert("Delete Address", `Are you sure you want to delete ${label}`, [
-            {text: "Cancel", style: "cancel"},
-            {text: "Delete", style: "destructive", onPress: () => deleteAddress(addressId)},
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", style: "destructive", onPress: () => deleteAddress(addressId) },
         ]);
-    }
+    };
 
-    const handleSaveAddress = async () => {
+    const handleSaveAddress = () => {
         if (
             !addressForm.label ||
             !addressForm.fullName ||
@@ -114,23 +114,23 @@ function AddressesScreen() {
                 },
             });
         }
-    }
+    };
 
-    const handleCloseAddressForm = async () => {
+    const handleCloseAddressForm = () => {
         setShowAddressForm(false);
         setEditingAddressId(null);
-    }
+    };
 
-    if (isLoading) return <LoadingUI/>
-    if (isError) return <ErrorUI/>
+    if (isLoading) return <LoadingUI />;
+    if (isError) return <ErrorUI />;
 
     return (
         <SafeScreen>
-            <AddressesHeader/>
+            <AddressesHeader />
 
             {addresses.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="location-outline" size={80} color="#666"/>
+                    <Ionicons name="location-outline" size={80} color="#666" />
                     <Text className="text-text-primary font-semibold text-xl mt-4">No addresses yet</Text>
                     <Text className="text-text-secondary text-center mt-2">
                         Add your first delivery address
@@ -147,9 +147,9 @@ function AddressesScreen() {
                 <ScrollView
                     className="flex-1"
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{paddingBottom: 100}}
+                    contentContainerStyle={{ paddingBottom: 100 }}
                 >
-                    <View className={"px-6 py-4"}>
+                    <View className="px-6 py-4">
                         {addresses.map((address) => (
                             <AddressCard
                                 key={address._id}
@@ -167,7 +167,7 @@ function AddressesScreen() {
                             onPress={handleAddAddress}
                         >
                             <View className="flex-row items-center">
-                                <Ionicons name="add-circle-outline" size={24} color="#121212"/>
+                                <Ionicons name="add-circle-outline" size={24} color="#121212" />
                                 <Text className="text-background font-bold text-base ml-2">Add New Address</Text>
                             </View>
                         </TouchableOpacity>
@@ -186,17 +186,16 @@ function AddressesScreen() {
                 onFormChange={setAddressForm}
             />
         </SafeScreen>
-    )
+    );
 }
-
-export default AddressesScreen
+export default AddressesScreen;
 
 function ErrorUI() {
     return (
         <SafeScreen>
-            <AddressesHeader/>
+            <AddressesHeader />
             <View className="flex-1 items-center justify-center px-6">
-                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B"/>
+                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
                 <Text className="text-text-primary font-semibold text-xl mt-4">
                     Failed to load addresses
                 </Text>
@@ -211,9 +210,9 @@ function ErrorUI() {
 function LoadingUI() {
     return (
         <SafeScreen>
-            <AddressesHeader/>
+            <AddressesHeader />
             <View className="flex-1 items-center justify-center px-6">
-                <ActivityIndicator size="large" color="#00D9FF"/>
+                <ActivityIndicator size="large" color="#00D9FF" />
                 <Text className="text-text-secondary mt-4">Loading addresses...</Text>
             </View>
         </SafeScreen>

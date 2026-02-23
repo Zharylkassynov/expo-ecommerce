@@ -1,32 +1,30 @@
 import mongoose from "mongoose";
 
-const orderItemSchema = new mongoose.Schema(
-    {
-        product: {
-            type: mongoose.Types.ObjectId,
-            ref: "Product",
-            required: true,
-        },
-        name: {
-            type: String,
-            required: true,
-        },
-        price: {
-            type: Number,
-            required: true,
-            min: 0
-        },
-        quantity: {
-            type: Number,
-            required: true,
-            min: 1
-        },
-        image: {
-            type: String,
-            required: true,
-        }
-    }
-)
+const orderItemSchema = new mongoose.Schema({
+    product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+        required: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
+    price: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+    },
+    image: {
+        type: String,
+        required: true,
+    },
+});
 
 const shippingAddressSchema = new mongoose.Schema({
     fullName: {
@@ -52,9 +50,8 @@ const shippingAddressSchema = new mongoose.Schema({
     phoneNumber: {
         type: String,
         required: true,
-    }
+    },
 });
-
 
 const orderSchema = new mongoose.Schema(
     {
@@ -70,7 +67,7 @@ const orderSchema = new mongoose.Schema(
         orderItems: [orderItemSchema],
         shippingAddress: {
             type: shippingAddressSchema,
-            required: true
+            required: true,
         },
         paymentResult: {
             id: String,
@@ -79,21 +76,21 @@ const orderSchema = new mongoose.Schema(
         totalPrice: {
             type: Number,
             required: true,
-            min: 0
+            min: 0,
         },
         status: {
             type: String,
             enum: ["pending", "shipped", "delivered"],
-            default: "pending"
+            default: "pending",
         },
         deliveredAt: {
             type: Date,
         },
         shippedAt: {
             type: Date,
-        }
+        },
     },
-    {timestamps: true}
+    { timestamps: true }
 );
 
 export const Order = mongoose.model("Order", orderSchema);

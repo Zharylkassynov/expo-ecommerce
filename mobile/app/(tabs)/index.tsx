@@ -23,7 +23,7 @@ const ShopScreen = () => {
     const filteredProducts = useMemo(() => {
         if (!products) return [];
 
-        let filtered = products;
+        let filtered = products.filter((product) => product && product._id && Array.isArray(product.images));
 
         // filtering by category
         if (selectedCategory !== "All") {

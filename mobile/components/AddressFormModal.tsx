@@ -11,7 +11,7 @@ import {
     Platform,
 } from "react-native";
 import SafeScreen from "./SafeScreen";
-import {Ionicons} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 interface AddressFormData {
     label: string;
@@ -49,7 +49,7 @@ const AddressFormModal = ({
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                className={"flex-1"}
+                className="flex-1"
             >
                 <SafeScreen>
                     {/* HEADER */}
@@ -58,16 +58,16 @@ const AddressFormModal = ({
                             {isEditing ? "Edit Address" : "Add New Address"}
                         </Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={28} color="#FFFFFF"/>
+                            <Ionicons name="close" size={28} color="#FFFFFF" />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView
-                        className={"flex-1"}
-                        contentContainerStyle={{paddingBottom: 50}}
+                        className="flex-1"
+                        contentContainerStyle={{ paddingBottom: 50 }}
                         showsVerticalScrollIndicator={false}
                     >
-                        <View className={"p-6"}>
+                        <View className="p-6">
                             {/* LABEL INPUT */}
                             <View className="mb-5">
                                 <Text className="text-text-primary font-semibold mb-2">Label</Text>
@@ -76,7 +76,7 @@ const AddressFormModal = ({
                                     placeholder="e.g., Home, Work, Office"
                                     placeholderTextColor="#666"
                                     value={addressForm.label}
-                                    onChangeText={(text) => onFormChange({...addressForm, label: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, label: text })}
                                 />
                             </View>
 
@@ -88,7 +88,7 @@ const AddressFormModal = ({
                                     placeholder="Enter your full name"
                                     placeholderTextColor="#666"
                                     value={addressForm.fullName}
-                                    onChangeText={(text) => onFormChange({...addressForm, fullName: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, fullName: text })}
                                 />
                             </View>
 
@@ -100,7 +100,7 @@ const AddressFormModal = ({
                                     placeholder="Street address, apt/suite number"
                                     placeholderTextColor="#666"
                                     value={addressForm.streetAddress}
-                                    onChangeText={(text) => onFormChange({...addressForm, streetAddress: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, streetAddress: text })}
                                     multiline
                                 />
                             </View>
@@ -113,7 +113,7 @@ const AddressFormModal = ({
                                     placeholder="e.g., New York"
                                     placeholderTextColor="#666"
                                     value={addressForm.city}
-                                    onChangeText={(text) => onFormChange({...addressForm, city: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, city: text })}
                                 />
                             </View>
 
@@ -125,7 +125,7 @@ const AddressFormModal = ({
                                     placeholder="e.g., NY"
                                     placeholderTextColor="#666"
                                     value={addressForm.state}
-                                    onChangeText={(text) => onFormChange({...addressForm, state: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, state: text })}
                                 />
                             </View>
 
@@ -137,7 +137,7 @@ const AddressFormModal = ({
                                     placeholder="e.g., 10001"
                                     placeholderTextColor="#666"
                                     value={addressForm.zipCode}
-                                    onChangeText={(text) => onFormChange({...addressForm, zipCode: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, zipCode: text })}
                                     keyboardType="numeric"
                                 />
                             </View>
@@ -150,7 +150,7 @@ const AddressFormModal = ({
                                     placeholder="+1 (555) 123-4567"
                                     placeholderTextColor="#666"
                                     value={addressForm.phoneNumber}
-                                    onChangeText={(text) => onFormChange({...addressForm, phoneNumber: text})}
+                                    onChangeText={(text) => onFormChange({ ...addressForm, phoneNumber: text })}
                                     keyboardType="phone-pad"
                                 />
                             </View>
@@ -160,7 +160,7 @@ const AddressFormModal = ({
                                 <Text className="text-text-primary font-semibold">Set as default address</Text>
                                 <Switch
                                     value={addressForm.isDefault}
-                                    onValueChange={(value) => onFormChange({...addressForm, isDefault: value})}
+                                    onValueChange={(value) => onFormChange({ ...addressForm, isDefault: value })}
                                     thumbColor="white"
                                 />
                             </View>
@@ -173,7 +173,7 @@ const AddressFormModal = ({
                                 disabled={isAddingAddress || isUpdatingAddress}
                             >
                                 {isAddingAddress || isUpdatingAddress ? (
-                                    <ActivityIndicator size="small" color="#121212"/>
+                                    <ActivityIndicator size="small" color="#121212" />
                                 ) : (
                                     <Text className="text-background font-bold text-lg">
                                         {isEditing ? "Save Changes" : "Add Address"}
@@ -185,7 +185,7 @@ const AddressFormModal = ({
                 </SafeScreen>
             </KeyboardAvoidingView>
         </Modal>
-    )
+    );
 };
 
 export default AddressFormModal;

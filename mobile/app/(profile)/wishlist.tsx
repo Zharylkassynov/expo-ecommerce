@@ -1,19 +1,20 @@
 import SafeScreen from "@/components/SafeScreen";
 import useCart from "@/hooks/useCart";
 import useWishlist from "@/hooks/useWishlist";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import {ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 function WishlistScreen() {
-    const {wishlist, isLoading, isError, removeFromWishlist, isRemovingFromWishlist} = useWishlist();
+    const { wishlist, isLoading, isError, removeFromWishlist, isRemovingFromWishlist } =
+        useWishlist();
 
-    const {addToCart, isAddingToCart} = useCart();
+    const { addToCart, isAddingToCart } = useCart();
 
     const handleRemoveFromWishlist = (productId: string, productName: string) => {
         Alert.alert("Remove from wishlist", `Remove ${productName} from wishlist`, [
-            {text: "Cancel", style: "cancel"},
+            { text: "Cancel", style: "cancel" },
             {
                 text: "Remove",
                 style: "destructive",
@@ -25,7 +26,7 @@ function WishlistScreen() {
 
     const handleAddToCart = (productId: string, productName: string) => {
         addToCart(
-            {productId, quantity: 1},
+            { productId, quantity: 1 },
             {
                 onSuccess: () => Alert.alert("Success", `${productName} added to cart!`),
                 onError: (error: any) => {
@@ -35,15 +36,15 @@ function WishlistScreen() {
         );
     };
 
-    if(isLoading) return <LoadingUI />
-    if(isError) return <ErrorUI />
+    if (isLoading) return <LoadingUI />;
+    if (isError) return <ErrorUI />;
 
     return (
         <SafeScreen>
             {/* HEADER */}
             <View className="px-6 pb-5 border-b border-surface flex-row items-center">
                 <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                    <Ionicons name="arrow-back" size={28} color="#FFFFFF"/>
+                    <Ionicons name="arrow-back" size={28} color="#FFFFFF" />
                 </TouchableOpacity>
                 <Text className="text-text-primary text-2xl font-bold">Wishlist</Text>
                 <Text className="text-text-secondary text-sm ml-auto">
@@ -53,7 +54,7 @@ function WishlistScreen() {
 
             {wishlist.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="heart-outline" size={80} color="#666"/>
+                    <Ionicons name="heart-outline" size={80} color="#666" />
                     <Text className="text-text-primary font-semibold text-xl mt-4">
                         Your wishlist is empty
                     </Text>
@@ -72,24 +73,24 @@ function WishlistScreen() {
                 <ScrollView
                     className="flex-1"
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{paddingBottom: 100}}
+                    contentContainerStyle={{ paddingBottom: 100 }}
                 >
-                    <View className={"px-6 py-4"}>
-                        {wishlist.map(item => (
+                    <View className="px-6 py-4">
+                        {wishlist.map((item) => (
                             <TouchableOpacity
                                 key={item._id}
-                                className={"bg-surface rounded-3xl overflow-hidden mb-3"}
+                                className="bg-surface rounded-3xl overflow-hidden mb-3"
                                 activeOpacity={0.8}
                                 // onPress={() => router.push(`/product/${item._id}`)}
                             >
-                                <View className={"flex-row p-4"}>
+                                <View className="flex-row p-4">
                                     <Image
                                         source={item.images[0]}
                                         className="rounded-2xl bg-background-lighter"
-                                        style={{width: 96, height: 96, borderRadius: 8}}
+                                        style={{ width: 96, height: 96, borderRadius: 8 }}
                                     />
 
-                                    <View className={"flex-1 ml-4"}>
+                                    <View className="flex-1 ml-4">
                                         <Text className="text-text-primary font-bold text-base mb-2" numberOfLines={2}>
                                             {item.name}
                                         </Text>
@@ -99,14 +100,14 @@ function WishlistScreen() {
 
                                         {item.stock > 0 ? (
                                             <View className="flex-row items-center">
-                                                <View className="w-2 h-2 bg-green-500 rounded-full mr-2"/>
+                                                <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
                                                 <Text className="text-green-500 text-sm font-semibold">
                                                     {item.stock} in stock
                                                 </Text>
                                             </View>
                                         ) : (
                                             <View className="flex-row items-center">
-                                                <View className="w-2 h-2 bg-red-500 rounded-full mr-2"/>
+                                                <View className="w-2 h-2 bg-red-500 rounded-full mr-2" />
                                                 <Text className="text-red-500 text-sm font-semibold">Out of Stock</Text>
                                             </View>
                                         )}
@@ -118,10 +119,9 @@ function WishlistScreen() {
                                         onPress={() => handleRemoveFromWishlist(item._id, item.name)}
                                         disabled={isRemovingFromWishlist}
                                     >
-                                        <Ionicons name="trash-outline" size={20} color="#EF4444"/>
+                                        <Ionicons name="trash-outline" size={20} color="#EF4444" />
                                     </TouchableOpacity>
                                 </View>
-
                                 {item.stock > 0 && (
                                     <View className="px-4 pb-4">
                                         <TouchableOpacity
@@ -131,7 +131,7 @@ function WishlistScreen() {
                                             disabled={isAddingToCart}
                                         >
                                             {isAddingToCart ? (
-                                                <ActivityIndicator size="small" color="#121212"/>
+                                                <ActivityIndicator size="small" color="#121212" />
                                             ) : (
                                                 <Text className="text-background font-bold">Add to Cart</Text>
                                             )}
@@ -143,11 +143,9 @@ function WishlistScreen() {
                     </View>
                 </ScrollView>
             )}
-
         </SafeScreen>
-    )
+    );
 }
-
 export default WishlistScreen;
 
 function LoadingUI() {

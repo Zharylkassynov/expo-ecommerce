@@ -25,6 +25,8 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
 
     const { isAddingToCart, addToCart } = useCart();
 
+    const validProducts = (products?.filter((p): p is Product => Boolean(p != null && p._id && Array.isArray(p.images) && p.images.length > 0)) ?? []);
+
     const handleAddToCart = (productId: string, productName: string) => {
         addToCart(
             { productId, quantity: 1 },
@@ -39,7 +41,9 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
         );
     };
 
-    const renderProduct = ({ item: product }: { item: Product }) => (
+    const renderProduct = ({ item: product }: { item: Product }) => {
+        if (!product || !product._id || !Array.isArray(product.images) || product.images.length === 0) return null;
+        return (
         <TouchableOpacity
             className="bg-surface rounded-3xl overflow-hidden mb-3"
             style={{ width: "48%" }}
@@ -80,13 +84,13 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
                 <View className="flex-row items-center mb-2">
                     <Ionicons name="star" size={12} color="#FFC107" />
                     <Text className="text-text-primary text-xs font-semibold ml-1">
-                        {product.averageRating.toFixed(1)}
+                        {(product.averageRating ?? 0).toFixed(1)}
                     </Text>
-                    <Text className="text-text-secondary text-xs ml-1">({product.totalReviews})</Text>
+                    <Text className="text-text-secondary text-xs ml-1">({product.totalReviews ?? 0})</Text>
                 </View>
 
                 <View className="flex-row items-center justify-between">
-                    <Text className="text-primary font-bold text-lg">${product.price.toFixed(2)}</Text>
+                    <Text className="text-primary font-bold text-lg">${(product.price ?? 0).toFixed(2)}</Text>
 
                     <TouchableOpacity
                         className="bg-primary rounded-full w-8 h-8 items-center justify-center"
@@ -104,6 +108,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             </View>
         </TouchableOpacity>
     );
+    };
 
     if (isLoading) {
         return (
@@ -126,9 +131,9 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
 
     return (
         <FlatList
-            data={products}
+            data={validProducts}
             renderItem={renderProduct}
-            keyExtractor={(item) => item._id}
+            keyExtractor={(item, index) => item?._id ?? `product-${index}`}
             numColumns={2}
             columnWrapperStyle={{ justifyContent: "space-between" }}
             showsVerticalScrollIndicator={false}

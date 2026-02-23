@@ -12,28 +12,30 @@ export async function createPaymentIntent(req, res) {
         const { cartItems, shippingAddress } = req.body;
         const user = req.user;
 
-        // Validate cart items
         if (!cartItems || cartItems.length === 0) {
             return res.status(400).json({ error: "Cart is empty" });
         }
 
-        // Calculate total from server-side (don't trust client - ever.)
         let subtotal = 0;
         const validatedItems = [];
 
         for (const item of cartItems) {
             const product = await Product.findById(item.product._id);
+
             if (!product) {
-                return res.status(404).json({ error: `Product ${item.product.name} not found` });
+                return res.status(404).json({ error: "Product not found" });
             }
 
             if (product.stock < item.quantity) {
-                return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
+                return res.status(400).json({
+                    error: `Insufficient stock for ${product.name}`,
+                });
             }
 
             subtotal += product.price * item.quantity;
+
             validatedItems.push({
-                product: product._id.toString(),
+                product: product._id,
                 name: product.name,
                 price: product.price,
                 quantity: item.quantity,
@@ -41,53 +43,67 @@ export async function createPaymentIntent(req, res) {
             });
         }
 
-        const shipping = 10.0; // $10
-        const tax = subtotal * 0.08; // 8%
+        const shipping = 10.0;
+        const tax = subtotal * 0.08;
         const total = subtotal + shipping + tax;
 
         if (total <= 0) {
             return res.status(400).json({ error: "Invalid order total" });
         }
 
-        // find or create the stripe customer
+        // ✅ 1️⃣ Create Order BEFORE Stripe
+        const order = await Order.create({
+            user: user._id,
+            clerkId: user.clerkId,
+            orderItems: validatedItems,
+            shippingAddress,
+            subtotal,
+            shipping,
+            tax,
+            totalPrice: total,
+            status: "pending",
+        });
+
+        // ✅ 2️⃣ Find or create Stripe customer
         let customer;
+
         if (user.stripeCustomerId) {
-            // find the customer
             customer = await stripe.customers.retrieve(user.stripeCustomerId);
         } else {
-            // create the customer
             customer = await stripe.customers.create({
                 email: user.email,
                 name: user.name,
-                metadata: {
-                    clerkId: user.clerkId,
-                    userId: user._id.toString(),
-                },
             });
 
-            // add the stripe customer ID to the  user object in the DB
-            await User.findByIdAndUpdate(user._id, { stripeCustomerId: customer.id });
+            await User.findByIdAndUpdate(user._id, {
+                stripeCustomerId: customer.id,
+            });
         }
 
-        // create payment intent
+        // ✅ 3️⃣ Create PaymentIntent (metadata SMALL)
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(total * 100), // convert to cents
+            amount: Math.round(total * 100),
             currency: "usd",
             customer: customer.id,
-            automatic_payment_methods: {
-                enabled: true,
-            },
+            automatic_payment_methods: { enabled: true },
             metadata: {
-                clerkId: user.clerkId,
+                orderId: order._id.toString(),
                 userId: user._id.toString(),
-                orderItems: JSON.stringify(validatedItems),
-                shippingAddress: JSON.stringify(shippingAddress),
-                totalPrice: total.toFixed(2),
             },
-            // in the webhooks section we will use this metadata
         });
 
-        res.status(200).json({ clientSecret: paymentIntent.client_secret });
+        // Save paymentIntentId
+        order.paymentResult = {
+            id: paymentIntent.id,
+            status: "pending",
+        };
+
+        await order.save();
+
+        res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+        });
+
     } catch (error) {
         console.error("Error creating payment intent:", error);
         res.status(500).json({ error: "Failed to create payment intent" });
@@ -99,7 +115,11 @@ export async function handleWebhook(req, res) {
     let event;
 
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, ENV.STRIPE_WEBHOOK_SECRET);
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            ENV.STRIPE_WEBHOOK_SECRET
+        );
     } catch (err) {
         console.error("Webhook signature verification failed:", err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -107,43 +127,43 @@ export async function handleWebhook(req, res) {
 
     if (event.type === "payment_intent.succeeded") {
         const paymentIntent = event.data.object;
-
-        console.log("Payment succeeded:", paymentIntent.id);
+        const { orderId } = paymentIntent.metadata;
 
         try {
-            const { userId, clerkId, orderItems, shippingAddress, totalPrice } = paymentIntent.metadata;
+            const order = await Order.findById(orderId);
 
-            // Check if order already exists (prevent duplicates)
-            const existingOrder = await Order.findOne({ "paymentResult.id": paymentIntent.id });
-            if (existingOrder) {
-                console.log("Order already exists for payment:", paymentIntent.id);
+            if (!order) {
+                console.error("Order not found:", orderId);
                 return res.json({ received: true });
             }
 
-            // create order
-            const order = await Order.create({
-                user: userId,
-                clerkId,
-                orderItems: JSON.parse(orderItems),
-                shippingAddress: JSON.parse(shippingAddress),
-                paymentResult: {
-                    id: paymentIntent.id,
-                    status: "succeeded",
-                },
-                totalPrice: parseFloat(totalPrice),
-            });
+            // Prevent double processing
+            if (order.status === "paid") {
+                return res.json({ received: true });
+            }
 
-            // update product stock
-            const items = JSON.parse(orderItems);
-            for (const item of items) {
+            order.status = "paid";
+            order.paymentResult = {
+                id: paymentIntent.id,
+                status: "succeeded",
+            };
+
+            await order.save();
+
+            // ✅ Decrease stock
+            for (const item of order.orderItems) {
                 await Product.findByIdAndUpdate(item.product, {
                     $inc: { stock: -item.quantity },
                 });
             }
 
-            console.log("Order created successfully:", order._id);
+            // ✅ Clear user cart
+            await Cart.findOneAndDelete({ user: order.user });
+
+            console.log("Order marked as paid:", order._id);
+
         } catch (error) {
-            console.error("Error creating order from webhook:", error);
+            console.error("Webhook processing error:", error);
         }
     }
 

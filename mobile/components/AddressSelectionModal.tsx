@@ -1,4 +1,4 @@
-import {useAddressess} from "@/hooks/useAddressess";
+import {useAddresses} from "@/hooks/useAddressess";
 import {Address} from "@/types";
 import {Ionicons} from "@expo/vector-icons";
 import {useState} from "react";
@@ -11,13 +11,18 @@ interface AddressSelectionModalProps {
     isProcessing: boolean;
 }
 
-const AddressSelectionModal = ({visible, onClose, onProceed, isProcessing}: AddressSelectionModalProps) => {
+const AddressSelectionModal = ({
+                                   visible,
+                                   onClose,
+                                   onProceed,
+                                   isProcessing,
+                               }: AddressSelectionModalProps) => {
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-    const {addresses, isLoading: addressesLoading} = useAddressess();
+    const {addresses, isLoading: addressesLoading} = useAddresses();
 
     return (
         <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-            <View className={"flex-1 bg-black/50 justify-end"}>
+            <View className="flex-1 bg-black/50 justify-end">
                 <View className="bg-background rounded-t-3xl h-1/2">
                     {/* Modal Header */}
                     <View className="flex-row items-center justify-between p-6 border-b border-surface">
@@ -28,16 +33,16 @@ const AddressSelectionModal = ({visible, onClose, onProceed, isProcessing}: Addr
                     </View>
 
                     {/* ADDRESSES LIST */}
-                    <ScrollView className={"flex-1 p-6"}>
+                    <ScrollView className="flex-1 p-6">
                         {addressesLoading ? (
                             <View className="py-8">
                                 <ActivityIndicator size="large" color="#00D9FF"/>
                             </View>
                         ) : (
-                            <View className={"gap-4"}>
-                                {addresses?.map((address: Address) => (
+                            <View className="gap-4">
+                                {addresses?.map((address: Address, index: number) => (
                                     <TouchableOpacity
-                                        key={address._id}
+                                        key={address._id ?? `addr-${index}`}
                                         className={`bg-surface rounded-3xl p-6 border-2 ${
                                             selectedAddress?._id === address._id
                                                 ? "border-primary"
@@ -83,7 +88,7 @@ const AddressSelectionModal = ({visible, onClose, onProceed, isProcessing}: Addr
                         )}
                     </ScrollView>
 
-                    <View className={"p-6 border-t border-surface"}>
+                    <View className="p-6 border-t border-surface">
                         <TouchableOpacity
                             className="bg-primary rounded-2xl py-5"
                             activeOpacity={0.9}
@@ -109,7 +114,7 @@ const AddressSelectionModal = ({visible, onClose, onProceed, isProcessing}: Addr
                 </View>
             </View>
         </Modal>
-    )
-}
+    );
+};
 
 export default AddressSelectionModal;

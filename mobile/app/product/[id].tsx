@@ -1,11 +1,11 @@
 import SafeScreen from "@/components/SafeScreen";
 import useCart from "@/hooks/useCart";
-import {useProduct} from "@/hooks/useProduct";
+import { useProduct } from "@/hooks/useProduct";
 import useWishlist from "@/hooks/useWishlist";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router, useLocalSearchParams} from "expo-router";
-import {useState} from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import {
     View,
     Text,
@@ -16,20 +16,23 @@ import {
     Dimensions,
 } from "react-native";
 
-const {width} = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
-function ProductDetailScreen() {
-    const {id} = useLocalSearchParams<{id:string}>()
-    const {data: product, isError, isLoading} = useProduct(id);
-    const {addToCart, isAddingToCart} = useCart();
-    const {isInWishlist, toggleWishlist, isAddingToWishlist, isRemovingFromWishlist} = useWishlist();
+const ProductDetailScreen = () => {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    const { data: product, isError, isLoading } = useProduct(id);
+    const { addToCart, isAddingToCart } = useCart();
+
+    const { isInWishlist, toggleWishlist, isAddingToWishlist, isRemovingFromWishlist } =
+        useWishlist();
+
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
 
     const handleAddToCart = () => {
         if (!product) return;
         addToCart(
-            {productId: product._id, quantity},
+            { productId: product._id, quantity },
             {
                 onSuccess: () => Alert.alert("Success", `${product.name} added to cart!`),
                 onError: (error: any) => {
@@ -39,8 +42,8 @@ function ProductDetailScreen() {
         );
     };
 
-    if (isLoading) return <LoadingUI/>
-    if (isError || !product) return <ErrorUI/>
+    if (isLoading) return <LoadingUI />;
+    if (isError || !product) return <ErrorUI />;
 
     const inStock = product.stock > 0;
 
@@ -53,7 +56,7 @@ function ProductDetailScreen() {
                     onPress={() => router.back()}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="arrow-back" size={24} color="#FFFFFF"/>
+                    <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -65,7 +68,7 @@ function ProductDetailScreen() {
                     activeOpacity={0.7}
                 >
                     {isAddingToWishlist || isRemovingFromWishlist ? (
-                        <ActivityIndicator size="small" color="#FFFFFF"/>
+                        <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
                         <Ionicons
                             name={isInWishlist(product._id) ? "heart" : "heart-outline"}
@@ -79,7 +82,7 @@ function ProductDetailScreen() {
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{paddingBottom: 100}}
+                contentContainerStyle={{ paddingBottom: 100 }}
             >
                 {/* IMAGE GALLERY */}
                 <View className="relative">
@@ -93,8 +96,8 @@ function ProductDetailScreen() {
                         }}
                     >
                         {product.images.map((image: string, index: number) => (
-                            <View key={index} style={{width}}>
-                                <Image source={image} style={{width, height: 400}} contentFit="cover"/>
+                            <View key={index} style={{ width }}>
+                                <Image source={image} style={{ width, height: 400 }} contentFit="cover" />
                             </View>
                         ))}
                     </ScrollView>
@@ -127,7 +130,7 @@ function ProductDetailScreen() {
                     {/* Rating & Reviews */}
                     <View className="flex-row items-center mb-4">
                         <View className="flex-row items-center bg-surface px-3 py-2 rounded-full">
-                            <Ionicons name="star" size={16} color="#FFC107"/>
+                            <Ionicons name="star" size={16} color="#FFC107" />
                             <Text className="text-text-primary font-bold ml-1 mr-2">
                                 {product.averageRating.toFixed(1)}
                             </Text>
@@ -135,14 +138,14 @@ function ProductDetailScreen() {
                         </View>
                         {inStock ? (
                             <View className="ml-3 flex-row items-center">
-                                <View className="w-2 h-2 bg-green-500 rounded-full mr-2"/>
+                                <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
                                 <Text className="text-green-500 font-semibold text-sm">
                                     {product.stock} in stock
                                 </Text>
                             </View>
                         ) : (
                             <View className="ml-3 flex-row items-center">
-                                <View className="w-2 h-2 bg-red-500 rounded-full mr-2"/>
+                                <View className="w-2 h-2 bg-red-500 rounded-full mr-2" />
                                 <Text className="text-red-500 font-semibold text-sm">Out of Stock</Text>
                             </View>
                         )}
@@ -164,7 +167,7 @@ function ProductDetailScreen() {
                                 activeOpacity={0.7}
                                 disabled={!inStock}
                             >
-                                <Ionicons name="remove" size={24} color={inStock ? "#FFFFFF" : "#666"}/>
+                                <Ionicons name="remove" size={24} color={inStock ? "#FFFFFF" : "#666"} />
                             </TouchableOpacity>
 
                             <Text className="text-text-primary text-xl font-bold mx-6">{quantity}</Text>
@@ -197,8 +200,7 @@ function ProductDetailScreen() {
             </ScrollView>
 
             {/* Bottom Action Bar */}
-            <View
-                className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface px-6 py-4 pb-8">
+            <View className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface px-6 py-4 pb-8">
                 <View className="flex-row items-center gap-3">
                     <View className="flex-1">
                         <Text className="text-text-secondary text-sm mb-1">Total Price</Text>
@@ -215,10 +217,10 @@ function ProductDetailScreen() {
                         disabled={!inStock || isAddingToCart}
                     >
                         {isAddingToCart ? (
-                            <ActivityIndicator size="small" color="#121212"/>
+                            <ActivityIndicator size="small" color="#121212" />
                         ) : (
                             <>
-                                <Ionicons name="cart" size={24} color={!inStock ? "#666" : "#121212"}/>
+                                <Ionicons name="cart" size={24} color={!inStock ? "#666" : "#121212"} />
                                 <Text
                                     className={`font-bold text-lg ml-2 ${
                                         !inStock ? "text-text-secondary" : "text-background"
@@ -232,16 +234,16 @@ function ProductDetailScreen() {
                 </View>
             </View>
         </SafeScreen>
-    )
-}
+    );
+};
 
-export default ProductDetailScreen
+export default ProductDetailScreen;
 
 function ErrorUI() {
     return (
         <SafeScreen>
             <View className="flex-1 items-center justify-center px-6">
-                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B"/>
+                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
                 <Text className="text-text-primary font-semibold text-xl mt-4">Product not found</Text>
                 <Text className="text-text-secondary text-center mt-2">
                     This product may have been removed or doesn&apos;t exist
@@ -261,7 +263,7 @@ function LoadingUI() {
     return (
         <SafeScreen>
             <View className="flex-1 items-center justify-center">
-                <ActivityIndicator size="large" color="#1DB954"/>
+                <ActivityIndicator size="large" color="#1DB954" />
                 <Text className="text-text-secondary mt-4">Loading product...</Text>
             </View>
         </SafeScreen>

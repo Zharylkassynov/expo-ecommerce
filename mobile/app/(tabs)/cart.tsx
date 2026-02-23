@@ -1,20 +1,20 @@
 import SafeScreen from "@/components/SafeScreen";
-import {useAddressess} from "@/hooks/useAddressess";
+import { useAddresses } from "@/hooks/useAddressess";
 import useCart from "@/hooks/useCart";
-import {useApi} from "@/lib/api";
-import {ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View} from "react-native";
-import {useStripe} from "@stripe/stripe-react-native";
-import {useState} from "react";
-import {Address} from "@/types";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
+import { useApi } from "@/lib/api";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useStripe } from "@stripe/stripe-react-native";
+import { useState } from "react";
+import { Address } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import OrderSummary from "@/components/OrderSummary";
 import AddressSelectionModal from "@/components/AddressSelectionModal";
 
-import * as Sentry from "@sentry/react-native"
+import * as Sentry from "@sentry/react-native";
 
 const CartScreen = () => {
-    const api = useApi()
+    const api = useApi();
     const {
         addToCart,
         isAddingToCart,
@@ -30,9 +30,9 @@ const CartScreen = () => {
         removeFromCart,
         updateQuantity,
     } = useCart();
-    const {addresses} = useAddressess()
+    const { addresses } = useAddresses();
 
-    const {initPaymentSheet, presentPaymentSheet} = useStripe();
+    const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [addressModalVisible, setAddressModalVisible] = useState(false);
@@ -46,12 +46,12 @@ const CartScreen = () => {
     const handleQuantityChange = (productId: string, currentQuantity: number, change: number) => {
         const newQuantity = currentQuantity + change;
         if (newQuantity < 1) return;
-        updateQuantity({productId, quantity: newQuantity});
+        updateQuantity({ productId, quantity: newQuantity });
     };
 
     const handleRemoveItem = (productId: string, productName: string) => {
         Alert.alert("Remove Item", `Remove ${productName} from cart?`, [
-            {text: "Cancel", style: "cancel"},
+            { text: "Cancel", style: "cancel" },
             {
                 text: "Remove",
                 style: "destructive",
@@ -68,7 +68,7 @@ const CartScreen = () => {
             Alert.alert(
                 "No Address",
                 "Please add a shipping address in your profile before checking out.",
-                [{text: "OK"}]
+                [{ text: "OK" }]
             );
             return;
         }
@@ -78,19 +78,20 @@ const CartScreen = () => {
     };
 
     const handleProceedWithPayment = async (selectedAddress: Address) => {
-        setAddressModalVisible(false)
+        setAddressModalVisible(false);
 
+        // log chechkout initiated
         Sentry.logger.info("Checkout initiated", {
             itemCount: cartItemCount,
             total: total.toFixed(2),
             city: selectedAddress.city,
-        })
+        });
 
         try {
             setPaymentLoading(true);
 
             // create payment intent with cart items and shipping address
-            const {data} = await api.post("/payment/create-intent", {
+            const { data } = await api.post("/payment/create-intent", {
                 cartItems,
                 shippingAddress: {
                     fullName: selectedAddress.fullName,
@@ -102,7 +103,7 @@ const CartScreen = () => {
                 },
             });
 
-            const {error: initError} = await initPaymentSheet({
+            const { error: initError } = await initPaymentSheet({
                 paymentIntentClientSecret: data.clientSecret,
                 merchantDisplayName: "Your Store Name",
             });
@@ -121,7 +122,7 @@ const CartScreen = () => {
             }
 
             // present payment sheet
-            const {error: presentError} = await presentPaymentSheet();
+            const { error: presentError } = await presentPaymentSheet();
 
             if (presentError) {
                 Sentry.logger.error("Payment cancelled", {
@@ -139,10 +140,7 @@ const CartScreen = () => {
                 });
 
                 Alert.alert("Success", "Your payment was successful! Your order is being processed.", [
-                    {
-                        text: "OK", onPress: () => {
-                        }
-                    },
+                    { text: "OK", onPress: () => {} },
                 ]);
                 clearCart();
             }
@@ -157,11 +155,11 @@ const CartScreen = () => {
         } finally {
             setPaymentLoading(false);
         }
-    }
+    };
 
-    if (isLoading) return <LoadingUI/>;
-    if (isError) return <ErrorUI/>;
-    if (cartItems.length === 0) return <EmptyUI/>;
+    if (isLoading) return <LoadingUI />;
+    if (isError) return <ErrorUI />;
+    if (cartItems.length === 0) return <EmptyUI />;
 
     return (
         <SafeScreen>
@@ -170,11 +168,11 @@ const CartScreen = () => {
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{paddingBottom: 240}}
+                contentContainerStyle={{ paddingBottom: 240 }}
             >
-                <View className={"px-6 gap-2"}>
+                <View className="px-6 gap-2">
                     {cartItems.map((item, index) => (
-                        <View key={item._id} className="bg-surface rounded-3xl overflow-hidden">
+                        <View key={item._id} className="bg-surface rounded-3xl overflow-hidden ">
                             <View className="p-4 flex-row">
                                 {/* product image */}
                                 <View className="relative">
@@ -182,14 +180,14 @@ const CartScreen = () => {
                                         source={item.product.images[0]}
                                         className="bg-background-lighter"
                                         contentFit="cover"
-                                        style={{width: 112, height: 112, borderRadius: 16}}
+                                        style={{ width: 112, height: 112, borderRadius: 16 }}
                                     />
                                     <View className="absolute top-2 right-2 bg-primary rounded-full px-2 py-0.5">
                                         <Text className="text-background text-xs font-bold">×{item.quantity}</Text>
                                     </View>
                                 </View>
 
-                                <View className={"flex-1 ml-4 justify-between"}>
+                                <View className="flex-1 ml-4 justify-between">
                                     <View>
                                         <Text
                                             className="text-text-primary font-bold text-lg leading-tight"
@@ -215,9 +213,9 @@ const CartScreen = () => {
                                             disabled={isUpdating}
                                         >
                                             {isUpdating ? (
-                                                <ActivityIndicator size="small" color="#FFFFFF"/>
+                                                <ActivityIndicator size="small" color="#FFFFFF" />
                                             ) : (
-                                                <Ionicons name="remove" size={18} color="#FFFFFF"/>
+                                                <Ionicons name="remove" size={18} color="#FFFFFF" />
                                             )}
                                         </TouchableOpacity>
 
@@ -232,9 +230,9 @@ const CartScreen = () => {
                                             disabled={isUpdating}
                                         >
                                             {isUpdating ? (
-                                                <ActivityIndicator size="small" color="#121212"/>
+                                                <ActivityIndicator size="small" color="#121212" />
                                             ) : (
-                                                <Ionicons name="add" size={18} color="#121212"/>
+                                                <Ionicons name="add" size={18} color="#121212" />
                                             )}
                                         </TouchableOpacity>
 
@@ -244,7 +242,7 @@ const CartScreen = () => {
                                             onPress={() => handleRemoveItem(item.product._id, item.product.name)}
                                             disabled={isRemoving}
                                         >
-                                            <Ionicons name="trash-outline" size={18} color="#EF4444"/>
+                                            <Ionicons name="trash-outline" size={18} color="#EF4444" />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -253,16 +251,17 @@ const CartScreen = () => {
                     ))}
                 </View>
 
-                <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total}/>
+                <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total} />
             </ScrollView>
 
             <View
-                className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface pt-4 pb-32 px-6"
+                className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t
+       border-surface pt-4 pb-32 px-6"
             >
                 {/* Quick Stats */}
                 <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center">
-                        <Ionicons name="cart" size={20} color="#1DB954"/>
+                        <Ionicons name="cart" size={20} color="#1DB954" />
                         <Text className="text-text-secondary ml-2">
                             {cartItemCount} {cartItemCount === 1 ? "item" : "items"}
                         </Text>
@@ -281,11 +280,11 @@ const CartScreen = () => {
                 >
                     <View className="py-5 flex-row items-center justify-center">
                         {paymentLoading ? (
-                            <ActivityIndicator size="small" color="#121212"/>
+                            <ActivityIndicator size="small" color="#121212" />
                         ) : (
                             <>
                                 <Text className="text-background font-bold text-lg mr-2">Checkout</Text>
-                                <Ionicons name="arrow-forward" size={20} color="#121212"/>
+                                <Ionicons name="arrow-forward" size={20} color="#121212" />
                             </>
                         )}
                     </View>
@@ -299,15 +298,15 @@ const CartScreen = () => {
                 isProcessing={paymentLoading}
             />
         </SafeScreen>
-    )
-}
+    );
+};
 
 export default CartScreen;
 
 function LoadingUI() {
     return (
         <View className="flex-1 bg-background items-center justify-center">
-            <ActivityIndicator size="large" color="#00D9FF"/>
+            <ActivityIndicator size="large" color="#00D9FF" />
             <Text className="text-text-secondary mt-4">Loading cart...</Text>
         </View>
     );
@@ -316,7 +315,7 @@ function LoadingUI() {
 function ErrorUI() {
     return (
         <View className="flex-1 bg-background items-center justify-center px-6">
-            <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B"/>
+            <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
             <Text className="text-text-primary font-semibold text-xl mt-4">Failed to load cart</Text>
             <Text className="text-text-secondary text-center mt-2">
                 Please check your connection and try again
@@ -332,7 +331,7 @@ function EmptyUI() {
                 <Text className="text-text-primary text-3xl font-bold tracking-tight">Cart</Text>
             </View>
             <View className="flex-1 items-center justify-center px-6">
-                <Ionicons name="cart-outline" size={80} color="#666"/>
+                <Ionicons name="cart-outline" size={80} color="#666" />
                 <Text className="text-text-primary font-semibold text-xl mt-4">Your cart is empty</Text>
                 <Text className="text-text-secondary text-center mt-2">
                     Add some products to get started

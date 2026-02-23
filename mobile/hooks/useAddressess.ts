@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/lib/api";
 import { Address } from "@/types";
 
-export const useAddressess = () => {
+export const useAddresses = () => {
     const api = useApi();
     const queryClient = useQueryClient();
 
@@ -14,7 +14,7 @@ export const useAddressess = () => {
         queryKey: ["addresses"],
         queryFn: async () => {
             const { data } = await api.get<{ addresses: Address[] }>("/users/addresses");
-            return data.addresses;
+            return data?.addresses ?? [];
         },
     });
 

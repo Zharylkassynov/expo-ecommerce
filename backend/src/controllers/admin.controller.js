@@ -2,6 +2,21 @@ import cloudinary from "../config/cloudinary.js";
 import { Product } from "../models/product.model.js";
 import { Order } from "../models/order.model.js";
 import { User } from "../models/user.model.js";
+import streamifier from "streamifier";
+
+const uploadToCloudinary = (fileBuffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: "products" },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+
+        streamifier.createReadStream(fileBuffer).pipe(stream);
+    });
+};
 
 export async function createProduct(req, res) {
     try {
@@ -20,9 +35,7 @@ export async function createProduct(req, res) {
         }
 
         const uploadPromises = req.files.map((file) => {
-            return cloudinary.uploader.upload(file.path, {
-                folder: "products",
-            });
+            return uploadToCloudinary(file.buffer);
         });
 
         const uploadResults = await Promise.all(uploadPromises);
@@ -66,30 +79,51 @@ export async function updateProduct(req, res) {
             return res.status(404).json({ message: "Product not found" });
         }
 
+        // Update basic fields
         if (name) product.name = name;
         if (description) product.description = description;
         if (price !== undefined) product.price = parseFloat(price);
         if (stock !== undefined) product.stock = parseInt(stock);
         if (category) product.category = category;
 
-        // handle image updates if new images are uploaded
+        // Handle new images
         if (req.files && req.files.length > 0) {
+
             if (req.files.length > 3) {
                 return res.status(400).json({ message: "Maximum 3 images allowed" });
             }
 
-            const uploadPromises = req.files.map((file) => {
-                return cloudinary.uploader.upload(file.path, {
-                    folder: "products",
+            // 🔹 1. Удаляем старые изображения из Cloudinary
+            if (product.images && product.images.length > 0) {
+                const publicIds = product.images.map((url) => {
+                    const parts = url.split("/");
+                    const filename = parts[parts.length - 1];
+                    return `products/${filename.split(".")[0]}`;
                 });
-            });
+
+                await Promise.all(
+                    publicIds.map((id) =>
+                        cloudinary.uploader.destroy(id)
+                    )
+                );
+            }
+
+            // 🔹 2. Загружаем новые
+            const uploadPromises = req.files.map((file) =>
+                uploadToCloudinary(file.buffer)
+            );
 
             const uploadResults = await Promise.all(uploadPromises);
-            product.images = uploadResults.map((result) => result.secure_url);
+
+            product.images = uploadResults.map(
+                (result) => result.secure_url
+            );
         }
 
         await product.save();
+
         res.status(200).json(product);
+
     } catch (error) {
         console.error("Error updating products:", error);
         res.status(500).json({ message: "Internal server error" });

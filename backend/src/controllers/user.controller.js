@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 
 export async function addAddress(req, res) {
+    console.log("[addAddress] Request received");
     try {
         const { label, fullName, streetAddress, city, state, zipCode, phoneNumber, isDefault } =
             req.body;
@@ -9,6 +10,13 @@ export async function addAddress(req, res) {
 
         if (!fullName || !streetAddress || !city || !state || !zipCode) {
             return res.status(400).json({ error: "Missing required address fields" });
+        }
+        if (!label || !phoneNumber) {
+            return res.status(400).json({ error: "Label and phone number are required" });
+        }
+
+        if (!Array.isArray(user.addresses)) {
+            user.addresses = [];
         }
 
         // if this is set as default, unset all other defaults
@@ -34,15 +42,20 @@ export async function addAddress(req, res) {
         res.status(201).json({ message: "Address added successfully", addresses: user.addresses });
     } catch (error) {
         console.error("Error in addAddress controller:", error);
-        res.status(500).json({ error: "Internal server error" });
+        const isValidationError = error.name === "ValidationError";
+        const message = isValidationError
+            ? error.message
+            : "Internal server error";
+        res.status(500).json({ error: message });
     }
 }
 
 export async function getAddresses(req, res) {
     try {
         const user = req.user;
+        const addresses = Array.isArray(user.addresses) ? user.addresses : [];
 
-        res.status(200).json({ addresses: user.addresses });
+        res.status(200).json({ addresses });
     } catch (error) {
         console.error("Error in getAddresses controller:", error);
         res.status(500).json({ error: "Internal server error" });

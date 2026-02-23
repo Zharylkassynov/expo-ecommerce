@@ -5,25 +5,26 @@ const reviewSchema = new mongoose.Schema(
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
-            required: true
+            required: true,
         },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
         },
         orderId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Order",
-            required: true
+            required: true,
         },
         rating: {
             type: Number,
             required: true,
             min: 1,
-            max: 5
-        }
-    }, {timestamps: true}
+            max: 5,
+        },
+    },
+    { timestamps: true }
 );
 
 export const Review = mongoose.model("Review", reviewSchema);

@@ -2,11 +2,11 @@ import AddressCard from "@/components/AddressCard";
 import AddressesHeader from "@/components/AddressesHeader";
 import AddressFormModal from "@/components/AddressFormModal";
 import SafeScreen from "@/components/SafeScreen";
-import { useAddressess } from "@/hooks/useAddressess";
-import { Address } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {useAddresses} from "@/hooks/useAddressess";
+import {Address} from "@/types";
+import {Ionicons} from "@expo/vector-icons";
+import {useState} from "react";
+import {ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View} from "react-native";
 
 function AddressesScreen() {
     const {
@@ -19,7 +19,7 @@ function AddressesScreen() {
         isLoading,
         isUpdatingAddress,
         updateAddress,
-    } = useAddressess();
+    } = useAddresses();
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
     const [addressForm, setAddressForm] = useState({
@@ -65,8 +65,8 @@ function AddressesScreen() {
 
     const handleDeleteAddress = (addressId: string, label: string) => {
         Alert.alert("Delete Address", `Are you sure you want to delete ${label}`, [
-            { text: "Cancel", style: "cancel" },
-            { text: "Delete", style: "destructive", onPress: () => deleteAddress(addressId) },
+            {text: "Cancel", style: "cancel"},
+            {text: "Delete", style: "destructive", onPress: () => deleteAddress(addressId)},
         ]);
     };
 
@@ -110,7 +110,13 @@ function AddressesScreen() {
                     Alert.alert("Success", "Address added successfully");
                 },
                 onError: (error: any) => {
-                    Alert.alert("Error", error?.response?.data?.error || "Failed to add address");
+                    const message = error?.response?.data?.error || error?.message || "Failed to add address";
+                    console.warn("[addAddress error]", {
+                        status: error?.response?.status,
+                        data: error?.response?.data,
+                        message,
+                    });
+                    Alert.alert("Error", message);
                 },
             });
         }
@@ -121,16 +127,16 @@ function AddressesScreen() {
         setEditingAddressId(null);
     };
 
-    if (isLoading) return <LoadingUI />;
-    if (isError) return <ErrorUI />;
+    if (isLoading) return <LoadingUI/>;
+    if (isError) return <ErrorUI/>;
 
     return (
         <SafeScreen>
-            <AddressesHeader />
+            <AddressesHeader/>
 
             {addresses.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="location-outline" size={80} color="#666" />
+                    <Ionicons name="location-outline" size={80} color="#666"/>
                     <Text className="text-text-primary font-semibold text-xl mt-4">No addresses yet</Text>
                     <Text className="text-text-secondary text-center mt-2">
                         Add your first delivery address
@@ -147,12 +153,12 @@ function AddressesScreen() {
                 <ScrollView
                     className="flex-1"
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 100 }}
+                    contentContainerStyle={{paddingBottom: 100}}
                 >
                     <View className="px-6 py-4">
-                        {addresses.map((address) => (
+                        {addresses.map((address, index) => (
                             <AddressCard
-                                key={address._id}
+                                key={address._id ?? `addr-${index}`}
                                 address={address}
                                 onEdit={handleEditAddress}
                                 onDelete={handleDeleteAddress}
@@ -167,7 +173,7 @@ function AddressesScreen() {
                             onPress={handleAddAddress}
                         >
                             <View className="flex-row items-center">
-                                <Ionicons name="add-circle-outline" size={24} color="#121212" />
+                                <Ionicons name="add-circle-outline" size={24} color="#121212"/>
                                 <Text className="text-background font-bold text-base ml-2">Add New Address</Text>
                             </View>
                         </TouchableOpacity>
@@ -188,14 +194,15 @@ function AddressesScreen() {
         </SafeScreen>
     );
 }
+
 export default AddressesScreen;
 
 function ErrorUI() {
     return (
         <SafeScreen>
-            <AddressesHeader />
+            <AddressesHeader/>
             <View className="flex-1 items-center justify-center px-6">
-                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
+                <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B"/>
                 <Text className="text-text-primary font-semibold text-xl mt-4">
                     Failed to load addresses
                 </Text>
@@ -210,9 +217,9 @@ function ErrorUI() {
 function LoadingUI() {
     return (
         <SafeScreen>
-            <AddressesHeader />
+            <AddressesHeader/>
             <View className="flex-1 items-center justify-center px-6">
-                <ActivityIndicator size="large" color="#00D9FF" />
+                <ActivityIndicator size="large" color="#00D9FF"/>
                 <Text className="text-text-secondary mt-4">Loading addresses...</Text>
             </View>
         </SafeScreen>

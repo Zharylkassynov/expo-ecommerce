@@ -1,20 +1,20 @@
 import Stripe from "stripe";
-import {ENV} from "../config/env.js";
-import {User} from "../models/user.model.js";
-import {Product} from "../models/product.model.js";
-import {Order} from "../models/order.model.js";
-import {Cart} from "../models/cart.model.js";
+import { ENV } from "../config/env.js";
+import { User } from "../models/user.model.js";
+import { Product } from "../models/product.model.js";
+import { Order } from "../models/order.model.js";
+import { Cart } from "../models/cart.model.js";
 
 const stripe = new Stripe(ENV.STRIPE_SECRET_KEY);
 
 export async function createPaymentIntent(req, res) {
     try {
-        const {cartItems, shippingAddress} = req.body;
+        const { cartItems, shippingAddress } = req.body;
         const user = req.user;
 
         // Validate cart items
         if (!cartItems || cartItems.length === 0) {
-            return res.status(400).json({error: "Cart is empty"});
+            return res.status(400).json({ error: "Cart is empty" });
         }
 
         // Calculate total from server-side (don't trust client - ever.)
@@ -24,11 +24,11 @@ export async function createPaymentIntent(req, res) {
         for (const item of cartItems) {
             const product = await Product.findById(item.product._id);
             if (!product) {
-                return res.status(404).json({error: `Product ${item.product.name} not found`});
+                return res.status(404).json({ error: `Product ${item.product.name} not found` });
             }
 
             if (product.stock < item.quantity) {
-                return res.status(400).json({error: `Insufficient stock for ${product.name}`});
+                return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
             }
 
             subtotal += product.price * item.quantity;
@@ -46,7 +46,7 @@ export async function createPaymentIntent(req, res) {
         const total = subtotal + shipping + tax;
 
         if (total <= 0) {
-            return res.status(400).json({error: "Invalid order total"});
+            return res.status(400).json({ error: "Invalid order total" });
         }
 
         // find or create the stripe customer
@@ -66,7 +66,7 @@ export async function createPaymentIntent(req, res) {
             });
 
             // add the stripe customer ID to the  user object in the DB
-            await User.findByIdAndUpdate(user._id, {stripeCustomerId: customer.id});
+            await User.findByIdAndUpdate(user._id, { stripeCustomerId: customer.id });
         }
 
         // create payment intent
@@ -87,15 +87,15 @@ export async function createPaymentIntent(req, res) {
             // in the webhooks section we will use this metadata
         });
 
-        res.status(200).json({clientSecret: paymentIntent.client_secret});
+        res.status(200).json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
         console.error("Error creating payment intent:", error);
-        res.status(500).json({error: "Failed to create payment intent"});
+        res.status(500).json({ error: "Failed to create payment intent" });
     }
 }
 
 export async function handleWebhook(req, res) {
-    const sig = req.headers("stripe-signature");
+    const sig = req.headers["stripe-signature"];
     let event;
 
     try {
@@ -111,13 +111,13 @@ export async function handleWebhook(req, res) {
         console.log("Payment succeeded:", paymentIntent.id);
 
         try {
-            const {userId, clerkId, orderItems, shippingAddress, totalPrice} = paymentIntent.metadata;
+            const { userId, clerkId, orderItems, shippingAddress, totalPrice } = paymentIntent.metadata;
 
             // Check if order already exists (prevent duplicates)
-            const existingOrder = await Order.findOne({"paymentResult.id": paymentIntent.id});
+            const existingOrder = await Order.findOne({ "paymentResult.id": paymentIntent.id });
             if (existingOrder) {
                 console.log("Order already exists for payment:", paymentIntent.id);
-                return res.json({received: true});
+                return res.json({ received: true });
             }
 
             // create order
@@ -137,7 +137,7 @@ export async function handleWebhook(req, res) {
             const items = JSON.parse(orderItems);
             for (const item of items) {
                 await Product.findByIdAndUpdate(item.product, {
-                    $inc: {stock: -item.quantity},
+                    $inc: { stock: -item.quantity },
                 });
             }
 
@@ -147,5 +147,5 @@ export async function handleWebhook(req, res) {
         }
     }
 
-    res.json({received: true});
+    res.json({ received: true });
 }

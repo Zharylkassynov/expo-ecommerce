@@ -1,24 +1,24 @@
-import {Product} from "../models/product.model.js";
-import {Order} from "../models/order.model.js";
-import {Review} from "../models/review.model.js";
+import { Order } from "../models/order.model.js";
+import { Product } from "../models/product.model.js";
+import { Review } from "../models/review.model.js";
 
 export async function createOrder(req, res) {
-    try{
+    try {
         const user = req.user;
-        const{orderItems, shippingAddress, paymentResult, totalPrice} = req.body;
+        const { orderItems, shippingAddress, paymentResult, totalPrice } = req.body;
 
-        if(!orderItems || orderItems.length === 0){
-            return res.status(400).json({error: "No order items"});
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).json({ error: "No order items" });
         }
 
-        //validate products and stock
-        for(const item of orderItems) {
+        // validate products and stock
+        for (const item of orderItems) {
             const product = await Product.findById(item.product._id);
-            if(!product){
-                return res.status(404).json({error: `Product ${item.name} not found!`});
+            if (!product) {
+                return res.status(404).json({ error: `Product ${item.name} not found` });
             }
-            if(product.stock < item.quantity) {
-                return res.status(400).json({error: `Insufficient stock for ${item.name}`});
+            if (product.stock < item.quantity) {
+                return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
             }
         }
 
@@ -31,44 +31,44 @@ export async function createOrder(req, res) {
             totalPrice,
         });
 
-        //update product stock
-        for(const item of orderItems) {
+        // update product stock
+        for (const item of orderItems) {
             await Product.findByIdAndUpdate(item.product._id, {
-                $inc: {stock: -item.quantity},
+                $inc: { stock: -item.quantity },
             });
         }
 
-        res.status(201).json({message: "Order created successfully", order});
+        res.status(201).json({ message: "Order created successfully", order });
     } catch (error) {
         console.error("Error in createOrder controller:", error);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
 export async function getUserOrders(req, res) {
-    try{
-        const orders = await Order.find({clerkId: req.user.clerkId})
+    try {
+        const orders = await Order.find({ clerkId: req.user.clerkId })
             .populate("orderItems.product")
-            .sort({createdAt: -1})
+            .sort({ createdAt: -1 });
 
-        //check if each order has been reviewed
+        // check if each order has been reviewed
 
-        const orderIds = order.map((order) => order._id);
-        const reviews = await Review.find({orderId: {$in: orderIds}});
-        const reviewOrderIds = new Set(reviews.map((review) => review.orderId.toString()));
+        const orderIds = orders.map((order) => order._id);
+        const reviews = await Review.find({ orderId: { $in: orderIds } });
+        const reviewedOrderIds = new Set(reviews.map((review) => review.orderId.toString()));
 
-        const orderWithReviewStatus = await Promise.all(
+        const ordersWithReviewStatus = await Promise.all(
             orders.map(async (order) => {
                 return {
                     ...order.toObject(),
-                    hasReviewed: reviewOrderIds.has(order._id.toString()),
-                }
+                    hasReviewed: reviewedOrderIds.has(order._id.toString()),
+                };
             })
-        )
+        );
 
-        res.status(200).json({orders: orderWithReviewStatus});
+        res.status(200).json({ orders: ordersWithReviewStatus });
     } catch (error) {
         console.error("Error in getUserOrders controller:", error);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).json({ error: "Internal server error" });
     }
 }

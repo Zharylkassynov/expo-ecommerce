@@ -1,13 +1,13 @@
-import { Order } from "../models/order.model.js";
-import { Product } from "../models/product.model.js";
-import { Review } from "../models/review.model.js";
+import {Order} from "../models/order.model.js";
+import {Product} from "../models/product.model.js";
+import {Review} from "../models/review.model.js";
 
 export async function createReview(req, res) {
     try {
-        const { productId, orderId, rating } = req.body;
+        const {productId, orderId, rating} = req.body;
 
         if (!rating || rating < 1 || rating > 5) {
-            return res.status(400).json({ error: "Rating must be between 1 and 5" });
+            return res.status(400).json({error: "Rating must be between 1 and 5"});
         }
 
         const user = req.user;
@@ -15,15 +15,15 @@ export async function createReview(req, res) {
         // verify order exists and is delivered
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ error: "Order not found" });
+            return res.status(404).json({error: "Order not found"});
         }
 
         if (order.clerkId !== user.clerkId) {
-            return res.status(403).json({ error: "Not authorized to review this order" });
+            return res.status(403).json({error: "Not authorized to review this order"});
         }
 
         if (order.status !== "delivered") {
-            return res.status(400).json({ error: "Can only review delivered orders" });
+            return res.status(400).json({error: "Can only review delivered orders"});
         }
 
         // verify product is in the order
@@ -31,24 +31,29 @@ export async function createReview(req, res) {
             (item) => item.product.toString() === productId.toString()
         );
         if (!productInOrder) {
-            return res.status(400).json({ error: "Product not found in this order" });
+            return res.status(400).json({error: "Product not found in this order"});
         }
 
+        let review;
         // check if review already exists
-        const existingReview = await Review.findOne({ productId, userId: user._id });
+        const existingReview = await Review.findOne({productId, userId: user._id});
         if (existingReview) {
-            return res.status(400).json({ error: "You have already reviewed this product" });
+            // update existing review
+            existingReview.rating = rating;
+            existingReview.orderId = orderId;
+            review = await existingReview.save();
+        } else {
+            // create new review
+            review = await Review.create({
+                productId,
+                userId: user._id,
+                orderId,
+                rating,
+            });
         }
-
-        const review = await Review.create({
-            productId,
-            userId: user._id,
-            orderId,
-            rating,
-        });
 
         // update the product rating with atomic aggregation
-        const reviews = await Review.find({ productId });
+        const reviews = await Review.find({productId});
         const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
@@ -56,49 +61,49 @@ export async function createReview(req, res) {
                 averageRating: totalRating / reviews.length,
                 totalReviews: reviews.length,
             },
-            { new: true, runValidators: true }
+            {new: true, runValidators: true}
         );
 
         if (!updatedProduct) {
             await Review.findByIdAndDelete(review._id);
-            return res.status(404).json({ error: "Product not found" });
+            return res.status(404).json({error: "Product not found"});
         }
 
-        res.status(201).json({ message: "Review submitted successfully", review });
+        res.status(201).json({message: "Review submitted successfully", review});
     } catch (error) {
         console.error("Error in createReview controller:", error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({error: "Internal server error"});
     }
 }
 
 export async function deleteReview(req, res) {
     try {
-        const { reviewId } = req.params;
+        const {reviewId} = req.params;
 
         const user = req.user;
 
         const review = await Review.findById(reviewId);
         if (!review) {
-            return res.status(404).json({ error: "Review not found" });
+            return res.status(404).json({error: "Review not found"});
         }
 
         if (review.userId.toString() !== user._id.toString()) {
-            return res.status(403).json({ error: "Not authorized to delete this review" });
+            return res.status(403).json({error: "Not authorized to delete this review"});
         }
 
         const productId = review.productId;
         await Review.findByIdAndDelete(reviewId);
 
-        const reviews = await Review.find({ productId });
+        const reviews = await Review.find({productId});
         const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
         await Product.findByIdAndUpdate(productId, {
             averageRating: reviews.length > 0 ? totalRating / reviews.length : 0,
             totalReviews: reviews.length,
         });
 
-        res.status(200).json({ message: "Review deleted successfully" });
+        res.status(200).json({message: "Review deleted successfully"});
     } catch (error) {
         console.error("Error in deleteReview controller:", error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({error: "Internal server error"});
     }
 }
